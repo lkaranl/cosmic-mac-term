@@ -1,4 +1,5 @@
 // Copyright 2023 System76 <info@system76.com>
+// Copyright 2024-2025 Karan Luciano <https://github.com/lkaranl> (macOS Port Maintainer)
 // SPDX-License-Identifier: GPL-3.0-only
 
 use alacritty_terminal::tty::Options;
@@ -127,8 +128,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // Platform-specific daemonization logic
+    // Disabled on macOS - macOS apps should not daemonize via fork
 
-    #[cfg(all(unix, not(target_os = "redox")))]
+    #[cfg(all(unix, not(target_os = "redox"), not(target_os = "macos")))]
     if daemonize {
         match fork::daemon(true, true) {
             Ok(fork::Fork::Child) => (),
@@ -166,6 +168,31 @@ fn main() -> Result<(), Box<dyn Error>> {
         };
         Some(options)
     } else {
+        #[cfg(target_os = "macos")]
+        {
+            let fish_paths = ["/opt/homebrew/bin/fish", "/usr/local/bin/fish", "/usr/bin/fish"];
+            let shell_path = fish_paths.iter().find(|p| std::path::Path::new(p).exists())
+                .map(|p| p.to_string())
+                .or_else(|| {
+                     if std::path::Path::new("/bin/bash").exists() {
+                         Some("/bin/bash".to_string())
+                     } else {
+                         None
+                     }
+                });
+
+            if let Some(shell) = shell_path {
+                log::info!("MacOS: Using override shell: {}", shell);
+                let options = tty::Options {
+                    shell: Some(tty::Shell::new(shell, Vec::new())),
+                    ..tty::Options::default()
+                };
+                Some(options)
+            } else {
+                None
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
         None
     };
 
@@ -1421,6 +1448,19 @@ impl Application for App {
 
     /// Creates the application, and optionally emits command on initialize.
     fn init(mut core: Core, flags: Self::Flags) -> (Self, Task<Self::Message>) {
+        #[cfg(target_os = "macos")]
+        {
+            use objc::{msg_send, sel, sel_impl};
+            use objc::runtime::{Object, Class};
+
+            unsafe {
+                 let app_class = Class::get("NSApplication").unwrap();
+                 let app: *mut Object = msg_send![app_class, sharedApplication];
+                 let policy = 0; // NSApplicationActivationPolicyRegular
+                 let _: () = msg_send![app, setActivationPolicy: policy];
+                 let _: () = msg_send![app, activateIgnoringOtherApps: true];
+            }
+        }
         core.window.content_container = false;
         core.window.show_headerbar = flags.config.show_headerbar;
 
@@ -1541,13 +1581,13 @@ impl Application for App {
             .author("System76")
             .license("GPL-3.0-only")
             .license_url("https://spdx.org/licenses/GPL-3.0-only")
-            .developers([("Jeremy Soller", "jeremy@system76.com")])
+            .developers([
+                ("Karan Luciano", "https://github.com/lkaranl"),
+                ("Jeremy Soller", "jeremy@system76.com"),
+            ])
             .links([
-                (fl!("repository"), "https://github.com/pop-os/cosmic-term"),
-                (
-                    fl!("support"),
-                    "https://github.com/pop-os/cosmic-term/issues",
-                ),
+                (fl!("repository"), "https://github.com/lkaranl/cosmic-mac-term"),
+                (fl!("support"), "mailto:karanluciano1@gmail.com"),
             ]);
 
         let mut app = Self {

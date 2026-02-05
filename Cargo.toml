@@ -1,8 +1,9 @@
 [package]
 name = "cosmic-term"
 version = "1.0.5"
-authors = ["Jeremy Soller <jeremy@system76.com>"]
+authors = ["Jeremy Soller <jeremy@system76.com>", "Karan Luciano <https://github.com/lkaranl>"]
 edition = "2024"
+repository = "https://github.com/lkaranl/cosmic-mac-term"
 license = "GPL-3.0-only"
 rust-version = "1.85"
 
@@ -36,7 +37,8 @@ thiserror = { version = "2.0", optional = true }
 secstr = { version = "0.5", optional = true }
 
 [dependencies.cosmic-files]
-git = "https://github.com/pop-os/cosmic-files.git"
+# git = "https://github.com/pop-os/cosmic-files.git"
+path = "vendor/cosmic-files"
 default-features = false
 
 [dependencies.cosmic-text]
@@ -52,11 +54,17 @@ features = ["about", "multi-window", "tokio", "winit", "surface-message"]
 [target.'cfg(unix)'.dependencies]
 fork = "0.4"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+
 [features]
-default = ["dbus-config", "wgpu", "wayland", "password_manager"]
+# macOS: use apenas "wgpu" (default)
+# Linux: adicione "wayland,dbus-config,password_manager"
+default = ["wgpu"]
 dbus-config = ["libcosmic/dbus-config"]
 wgpu = ["libcosmic/wgpu", "cosmic-files/wgpu"]
 wayland = ["libcosmic/wayland", "cosmic-files/wayland"]
+# password_manager requer secret-service (D-Bus) - não disponível no macOS
 password_manager = ["secret-service", "thiserror", "secstr"]
 
 [profile.release-with-debug]

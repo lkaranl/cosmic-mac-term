@@ -3086,6 +3086,7 @@ impl Application for App {
                     .id(terminal_id)
                     .disabled(self.core.window.show_context)
                     .on_context_menu(move |menu_state| Message::TabContextMenu(pane, menu_state))
+                    .on_click(move || Message::PaneClicked(pane))
                     .on_middle_click(move || Message::MiddleClick(pane, Some(entity_middle_click)))
                     .on_open_hyperlink(Some(Box::new(Message::LaunchUrl)))
                     .on_window_focused(|| Message::WindowFocused)

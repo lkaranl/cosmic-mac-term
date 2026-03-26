@@ -114,19 +114,19 @@ pub fn init_mac_menu() -> Menu {
             "PaneSplitHorizontal",
             fl!("split-horizontal"),
             true,
-            None,
+            Some("Cmd+Alt+D".parse().ok()).flatten(),
         ),
         &MenuItem::with_id(
             "PaneSplitVertical",
             fl!("split-vertical"),
             true,
-            None,
+            Some("Cmd+Alt+R".parse().ok()).flatten(),
         ),
         &MenuItem::with_id(
             "PaneToggleMaximized",
             fl!("pane-toggle-maximize"),
             true,
-            None,
+            Some("Cmd+Shift+X".parse().ok()).flatten(),
         ),
     ]).unwrap();
 

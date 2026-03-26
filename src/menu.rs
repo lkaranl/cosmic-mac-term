@@ -40,7 +40,12 @@ pub fn context_menu<'a>(
     let find_key = |action: &Action| -> String {
         for (key_bind, key_action) in key_binds {
             if action == key_action {
-                return key_bind.to_string();
+                let mut s = key_bind.to_string();
+                #[cfg(target_os = "macos")]
+                {
+                    s = s.replace("Super", "Cmd");
+                }
+                return s;
             }
         }
         String::new()

@@ -428,7 +428,14 @@ where
                     f32::from(background_color.b()) / 255.0,
                     match self.opacity {
                         Some(opacity) => opacity,
-                        None => f32::from(background_color.a()) / 255.0,
+                        None => {
+                            if cfg!(target_os = "macos") && background_color.a() == 255 {
+                                // Default background should be slightly transparent on macOS if not specified
+                                0.95
+                            } else {
+                                f32::from(background_color.a()) / 255.0
+                            }
+                        }
                     },
                 ),
             );
@@ -447,6 +454,7 @@ where
                     line_top: f32,
                     view_position: Point,
                     metadata_set: &'a IndexSet<Metadata>,
+                    opacity: Option<f32>,
                 }
 
                 impl<'a> BgRect<'a> {
@@ -477,7 +485,10 @@ where
                                 f32::from(color.r()) / 255.0,
                                 f32::from(color.g()) / 255.0,
                                 f32::from(color.b()) / 255.0,
-                                f32::from(color.a()) / 255.0,
+                                match self.opacity {
+                                    Some(opacity) => opacity * (f32::from(color.a()) / 255.0),
+                                    None => f32::from(color.a()) / 255.0,
+                                },
                             )
                         };
 
@@ -639,6 +650,7 @@ where
                     line_top: run.line_top,
                     view_position,
                     metadata_set,
+                    opacity: self.opacity,
                 };
                 for glyph in run.glyphs {
                     bg_rect.update(glyph, renderer, state.is_focused);

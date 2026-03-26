@@ -168,6 +168,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let startup_options = if let Some(shell_program) = shell_program_opt {
         let options = tty::Options {
             shell: Some(tty::Shell::new(shell_program, shell_args)),
+            env: get_macos_env(),
             ..tty::Options::default()
         };
         Some(options)
@@ -175,6 +176,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Some(shell) = get_fallback_shell() {
             let options = tty::Options {
                 shell: Some(shell),
+                env: get_macos_env(),
                 ..tty::Options::default()
             };
             Some(options)
@@ -1408,6 +1410,7 @@ impl App {
                                     None => {
                                         let options = tty::Options {
                                             shell: get_fallback_shell(),
+                                            env: get_macos_env(),
                                             ..tty::Options::default()
                                         };
                                         (options, None)
@@ -3312,4 +3315,24 @@ pub fn get_fallback_shell() -> Option<tty::Shell> {
         }
     }
     Option::None
+}
+
+pub fn get_macos_env() -> HashMap<String, String> {
+    let mut env = HashMap::new();
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(current_path) = std::env::var("PATH") {
+            let mut paths: Vec<String> = current_path.split(':').map(|s| s.to_string()).collect();
+            let brew_paths = ["/opt/homebrew/bin", "/usr/local/bin"];
+            
+            for path in brew_paths.iter().rev() {
+                let p = path.to_string();
+                if !paths.contains(&p) && std::path::Path::new(&p).exists() {
+                    paths.insert(0, p);
+                }
+            }
+            env.insert("PATH".to_string(), paths.join(":"));
+        }
+    }
+    env
 }

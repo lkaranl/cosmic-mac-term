@@ -9,3 +9,9 @@
 /.direnv/
 /.idea/
 nohup.out
+
+# macOS specific files
+.DS_Store
+
+# Logs
+*.log

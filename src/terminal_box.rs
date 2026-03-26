@@ -118,6 +118,7 @@ pub struct TerminalBox<'a, Message> {
     on_mouse_enter: Option<Box<dyn Fn() -> Message + 'a>>,
     opacity: Option<f32>,
     mouse_inside_boundary: Option<bool>,
+    on_click: Option<Box<dyn Fn() -> Message + 'a>>,
     on_middle_click: Option<Box<dyn Fn() -> Message + 'a>>,
     on_open_hyperlink: Option<Box<dyn Fn(String) -> Message + 'a>>,
     on_window_focused: Option<Box<dyn Fn() -> Message + 'a>>,
@@ -144,6 +145,7 @@ where
             on_mouse_enter: None,
             opacity: None,
             mouse_inside_boundary: None,
+            on_click: None,
             on_middle_click: None,
             key_binds: key_binds(),
             on_open_hyperlink: None,
@@ -194,6 +196,11 @@ where
 
     pub fn on_mouse_enter(mut self, on_mouse_enter: impl Fn() -> Message + 'a) -> Self {
         self.on_mouse_enter = Some(Box::new(on_mouse_enter));
+        self
+    }
+
+    pub fn on_click(mut self, on_click: impl Fn() -> Message + 'a) -> Self {
+        self.on_click = Some(Box::new(on_click));
         self
     }
 
@@ -1125,7 +1132,12 @@ where
                         state.autoscroll.stop();
                         terminal.report_mouse(event, &state.modifiers, col as u32, row as u32);
                     } else {
-                        state.is_focused = true;
+                        if !state.is_focused {
+                            state.is_focused = true;
+                            if let Some(on_click) = &self.on_click {
+                                shell.publish(on_click());
+                            }
+                        }
 
                         // Handle left click drag
                         #[allow(clippy::collapsible_if)]

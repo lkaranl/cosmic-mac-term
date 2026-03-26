@@ -1,8 +1,9 @@
+#![allow(unexpected_cfgs)]
 // Copyright 2023 System76 <info@system76.com>
 // Copyright 2024-2025 Karan Luciano <https://github.com/lkaranl> (macOS Port Maintainer)
 // SPDX-License-Identifier: GPL-3.0-only
 
-use alacritty_terminal::tty::Options;
+
 use alacritty_terminal::{event::Event as TermEvent, term, term::color::Colors as TermColors, tty};
 use cosmic::iced::clipboard::dnd::DndAction;
 use cosmic::widget::menu::action::MenuAction;
@@ -93,7 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut shell_program_opt = None;
     let mut shell_args = Vec::new();
-    let mut daemonize = true;
+    let _daemonize = true;
     // Parse the arguments using clap_lex
     while let Some(arg) = raw_args.next_os(&mut cursor) {
         match arg.to_str() {
@@ -109,7 +110,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 return Ok(());
             }
             Some("--no-daemon") => {
-                daemonize = false;
+                // _daemonize = false;
             }
             Some("-e") | Some("--command") | Some("--") => {
                 // Handle the '--command' or '-e' flag

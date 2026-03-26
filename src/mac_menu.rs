@@ -1,6 +1,6 @@
 #[cfg(target_os = "macos")]
 use {
-    crate::{Action, Config, fl},
+    crate::fl,
     muda::{Menu, MenuItem, PredefinedMenuItem, Submenu},
 };
 

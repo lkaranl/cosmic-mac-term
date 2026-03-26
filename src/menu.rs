@@ -43,7 +43,8 @@ pub fn context_menu<'a>(
                 let mut s = key_bind.to_string();
                 #[cfg(target_os = "macos")]
                 {
-                    s = s.replace("Super", "Cmd");
+                    s = s.replace("Super", "⌘");
+                    s = s.replace("Alt", "⌥");
                 }
                 return s;
             }
